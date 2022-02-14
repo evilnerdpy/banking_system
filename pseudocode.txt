@@ -1,0 +1,1001 @@
+Program Banking_system
+INCLUDE datetime in Banking_system
+
+FUNCTION greetings_page:
+    print "###################"
+    print "Welcome to MARK STEPANOV BANK!"
+    print "We are very happy that you choose us!"
+    print "Please login to move further..."
+ENDFUNCTION
+
+FUNCTION run_banking_system():
+BEGIN
+    DECLARE bool banking_system_is_running = True  
+    call greetings_page()
+    DOWHILE banking_system_is_running == True:
+        print "###################"
+        print "1.Log in"
+        print "2.I don't have an account"
+        print "Please choose an option: "
+        DECLARE string selected_option
+        INPUT selected_option
+
+        if selected_option == "1" then
+            call login_menu()
+        else if selected_option == "2" then
+            print "###################"
+            print "Please contact a bank employee and provide him with the information necessary for registration,"
+            print "now you will be returned to registration page"
+            print "press ENTER key to continue"
+        else:
+        print "Invalid input, please try again"
+        ENDIF
+    ENDDO
+ENDFUNCTION
+
+FUNCTION login_menu():
+    print "###################"
+    print "Please , enter your account number: "
+    DECLARE string acc_number;
+    INPUT acc_number
+    print "Please enter your password: "
+    DECLARE string password;
+    INPUT password
+    try: 
+        DECLARE list user
+        user = call get_user_from_database(acc_number, password)
+    except:
+        print "It appears your datta has been damaged, please contact staff"
+        return 
+    ENDTRY
+    DECLARE string user_privilege
+    if user_privilege == "super_user" then
+        call super_user_menu(user)
+    else if user_privilege == "staff" then
+        call staff_menu(user)
+    else if user_privilege == "user" then
+        call user_menu(user)
+    ENDIF
+ENDFUNCTION
+
+
+FUNCTION super_user_menu(user):
+    DHOWHILE True
+        print "Greetings, " + user[0] + "!"
+        print "You entered in super user mode\n"
+        print "Please, choose what you want to do..."
+        print "1.Create new staff user"
+        print "2.Show all users"
+        print "3.Change user information"
+        print "4.Back to registration menu"
+        print "Please,choose an option: "
+        DECLARE string selected_option
+        INPUT selected_option
+        if selected_option == "1" then
+            call create_new_user("staff")
+        else if selected_option == "2" then
+            call show_all_users()
+        else if selected_option == "3" then
+            call find_user_to_change_information("super_user")
+        else if selected_option == "4" then
+            return
+        else then
+        print "Invalid input, please try again"
+        ENDIF
+    ENDDO
+ENDFUNCTION
+
+FUNCTION staff_menu(user):
+    DECLARE staff_menu_is_running = True
+    DOWHILE staff_menu_is_running == True:
+        print "Greetings + " user[0] + "!"
+        print "You entered in staff mode"
+        print "Please, choose what you want to do..."
+        print "1.Create new  user"
+        print "2.Change user information"
+        print "3.Show all users"
+        print "4.Print user report"
+        print "5.Back to registration menu"
+        print "Please,choose an option: "
+        DECLARE string selected_option 
+        INPUT selected_option
+        if selected_option == "1" then
+            call create_new_user("user")
+        else if selected_option == "2" then
+            call find_user_to_change_information("staff")
+        else if selected_option == "3" then
+            call show_all_users()
+        else if selected_option == "4" then
+            call print_user_report()                     
+        else if selected_option == "5" then
+            return
+        else then
+            print("Invalid input, please try again")
+        ENDIF
+    ENDDO
+ENDFUNCTION
+
+
+
+
+DO IT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+FUNCTION print_user_perort():
+    DECLARE string identidier
+    print "Please enter user account number: "
+    INPUT identidier
+
+    DECLARE string selected_option
+    print "Please, type report of which wallet do you want to know..."
+    print "1.Curent Wallet"
+    print "2.Savings wallet"
+    print "Please , choose an option"
+    INPUT selected_option
+
+    if selected_option == "1" then
+        call user_report_menu(identidier, current)
+    else if selected_option == "2" then
+        call user_report_menu(identidier, "savings")
+    else then 
+        print("Invalid input, please try again")
+    ENDIF
+ENDFUNCTION
+    
+
+
+FUNCTION user_menu(user)
+    DECLARE bool user_menu_is_running = True
+    DOWHILE user_menu_is_running == True:
+        print "Greetings, " + user[0] + "!"
+        print "We are welcome you in our banking system!"
+        print "Please, choose what you want to do..."
+        print "1.Change my account information"
+        print "2.Operations with current account "
+        print "3.Operations with savings account"
+        print "4.Print a report"
+        print "5.Back to registration menu"
+        print "Please,choose an option: "
+        DECLARE string selected_option
+        INPUT selected_option
+        if selected_option == "1" then
+            call change_user_information(user[0], "user") 
+        else if selected_option == "2" then
+            call user_current_menu(user)
+        else if selected_option == "3" then
+            call user_savings_menu(user)
+        else if selected_option == "4" then
+            call print_user_report(user[0])
+        else if selected_option == "5" then
+            return
+        else then
+            print "Invalid input, please try again"
+        ENDIF        
+    ENDDO
+ENDFUNCTION
+
+FUNCTION print_user_perort_for_users(user):
+    DECLARE string selected_option
+    print "Please, type report of which wallet do you want to know..."
+    print "1.Curent Wallet"
+    print "2.Savings wallet"
+    print "Please , choose an option"
+    INPUT selected_option
+
+    if selected_option == "1" then
+        call user_report_menu(user[0], current)
+    else if selected_option == "2" then
+        call user_report_menu(user[0], "savings")
+    else then 
+        print("Invalid input, please try again")
+    ENDIF
+ENDFUNCTION
+
+FUNCTION show_all_users():
+    DECLARE LIST main_database = call get_main_database()
+    DECLARE LIST personal_information_database = call get_user_personal_details_database()
+    DECLARE int user_counter = 1
+    FOREACH user in main_database:
+        DECLARE list current_user = SPLIT_STRING_BY_CHAR(user, ",")
+        current_user[3] = REPLACE_CHAR_IN_STRING(current_user[3] , "\n", "")
+        print IntToString(user_counter) + ". Account number -" +  current_user[0]
+        print "privilege mode - "+ current_user[2]
+        print "account status - "+ current_user[3]
+        user_counter+=1
+        FOREACH personal_info in personal_information_database:
+            current_personal_info = SPLIT_STRING_BY_CHAR(personal_info , ",")
+            current_personal_info[2] = REPLACE_CHAR_IN_STRING(current_personal_info[2], "\n","")
+            if current_personal_info[0] == current_user[0] then
+                print "Name - " + current_personal_info[0]
+                print "Date of Birth - " + current_personal_info[1]
+                print "Email - " + current_personal_info[2]
+            ENDIF
+        ENDFOR
+    ENDFOR
+ENDFUNCTION
+
+
+
+FUNCTION user_report_menu(user_identidier, wallet_type):
+    DECLARE list user_wallet
+    if wallet_type == "savings" then
+        user_wallet = call get_user_savings_wallet(user_identidier)
+    else if user_wallet == "current":
+        user_wallet = call get_user_current_wallet(user_identidier)
+    ENDIF
+    if user_wallet == -1 then 
+        print "There is no information about " + user_identifier + " " + wallet_type + "wallet"
+        return 
+    ENDIF
+    DECLARE list transactions = user_wallet[2:LENGHTOFLIST(user_wallet)]
+    if transactions == [] then
+        print "No transactions were made on this wallet.Nothing to print yet!"
+        return
+    ENDIF
+
+    DECLARE DATETIME start_date = call get_day("start")
+    DECLARE DATETIME end_date = call get_day("end")
+
+    if end_date < start_date then 
+        print "End date should be later then start date!"
+        return
+    call print_report(start_date, end_date , transactions)
+    print "Pres ENTER to return to main menu"
+    INPUT 
+ENDFUNCTION
+
+FUNCTION check_if_date_is_in_right_form(day, month, year):
+    try:
+        datetime.datetime(STR_TO_INT(year), STR_TO_INT(month), STR_TO_INT(day))
+        return True
+    except:
+        return False
+    ENDTRY
+ENDFUNCTION
+
+FUNCTION get_day(condition):
+    DOWHILE True
+        DECLARE string day 
+        print "Please enter "+condition" + date DAY: "
+        input day
+
+        DECLARE string month
+        print "Please enter "+condition" + date MONTH: "
+        input month
+
+
+        DECLARE string year
+        print "Please enter "+condition" + date YEAR: "
+        input year
+
+        if call check_if_date_is_in_right_form(day, moonth, year) then
+            if condition == "start" then 
+                DECLARE DATETIME date = datetime.datetime(STR_TO_INT(year) , STR_TO_INT(month) , STR_TO_INT(day))
+                return Date
+            else if condition == "end" then
+                DECLARE DATETIME date = datetime.datetime(STR_TO_INT(year) , STR_TO_INT(month) , STR_TO_INT(day) , 23,59)
+                return date
+            ENDIF
+        ENDIF
+        print "Invalid date, please try one more time"
+    ENDDO
+ENDFUNCTION
+
+FUNCTION print_report(start_date, end_date , transactions):
+    DECLARE int counter = 1
+    FOREACH transaction in transactions:
+        DECLARE list current_transaction = SPLIT_STRING_BY_CHAR(transaction, "_")
+        DECLARE DATETIME current_transaction_date = datetime.datetime.TO_DATETIME(current_transaction, format="%y/%d/%m-%H:%M")
+        if start_date < current_transaction_date < end_date then
+            print INT_TO_STR(counter) +".Transaction time - " + current_transaction_date.TO_STRING(format=""%y/%d/%m-%H:%M")
+            print "Transaction type - " + current_transaction[1]
+            print "Transaction amount - " current_transaction[2]
+            counter +=1
+        ENDIF
+    ENDFOR
+ENDFUNCTION
+
+
+FUNCTION user_current_menu (user):
+    DOWHILE True:  
+        DECLARE list user_current_wallet = call get_user_current_wallet(user[0])
+        if user_current_wallet == -1 then
+            call add_new_user_in_current_wallets_database(user[0])
+            user_current_wallet = call get_user_current_wallet(user[0])
+        print "Dear " + user[0] + "!"
+        print "This is the menu for operations with the current wallet!"
+        print "Your balance is " + user_current_wallet[1] + "RM!"
+        print "Please , choose what you want to do..."
+        print "1.Make a deposit"
+        print "2.Make a withdrawal"
+        print "4.Back to main page"
+        print "Enter your option: "
+        DECLARE string selected_option
+        INPUT selected_option
+        if selected_option == "1" then
+            call user_deposit_menu(user)
+        else if selected_option == "2" then
+            call user_withdrawal_menu(user , STR_TO_FLOAT(user_current_wallet[1]))
+        else if selected_option == "3" then
+            return
+        else then
+            print "Invalid input, please try again"
+        ENDIF
+ENDFUNCTION
+
+FUNCTION check_if_deposit_value_is_in_right_form(deposit):
+    try:
+        if STR_TO_FLOAT(deposit) <= 0:
+            return False
+        ENDIF
+        return True
+    except:
+        return False
+    ENDTRY
+
+FUNCTION check_if_withdrawal_value_is_in_right_form(withdrawal, user_balance):
+    try:
+        if ((user_balance - STR_TO_FLOAT(withdrawal)) > 500) and STR_TO_FLOAT(withdrawal) > 0 then
+            return True
+        ENDIF
+        print "Not enough money on the balance"
+        print "Minimum balance for current wallet is 500RM"
+    except:
+        return False
+    ENDTRY
+ENDFUNCTION
+
+FUNCTION user_deposit_menu(user):
+    DECLARE string deposit_velue
+    print "Please , type how many RM you want to deposit: "
+    INPUT deposit_velue
+    if not check_if_deposit_value_is_in_right_form(deposit_velue) then
+        print "Invalid input, please try again"
+        return
+    call deposit_and_withdrawal_money_on_current_account(user[0] , deposit_value , "deposit")
+ENDFUNCTION
+
+FUNCTION user_withdrawal_menu(user):
+    DECLARE string withdrawal_velue
+    print "Please , type how many RM you want to withdrawal: "
+    INPUT withdrawal_velue
+    if not check_if_withdrawal_value_is_in_right_form(withdrawal_velue) then
+        print "Invalid input, please try again"
+        return
+    call deposit_and_withdrawal_money_on_current_account(user[0] , withdrawal_value , "withdrawal")
+ENDFUNCTION
+
+
+FUNCTION user_savings_menu (user):
+    DOWHILE True:  
+        DECLARE list user_savings_wallet = call get_user_savings_wallet(user[0])
+        if user_savings_wallet == -1 then
+            call add_new_user_in_savings_wallets_database(user[0])
+            user_savings_wallet = call get_user_savings_wallet(user[0])
+        print "Dear " + user[0] + "!"
+        print "This is the menu for operations with the savings wallet!"
+        print "Your balance is " + user_current_wallet[1] + "RM!"
+        print "Please , choose what you want to do..."
+        print "1.Make a deposit"
+        print "2.Make a withdrawal"
+        print "4.Back to main page"
+        print "Enter your option: "
+        DECLARE string selected_option
+        INPUT selected_option
+        if selected_option == "1" then
+            call user_savings_deposit_menu(user)
+        else if selected_option == "2" then
+            call user_savings_withdrawal_menu(user , STR_TO_FLOAT(user_current_wallet[1]))
+        else if selected_option == "3" then
+            return
+        else then
+            print "Invalid input, please try again"
+        ENDIF
+ENDFUNCTION
+
+def check_if_withdrawal_value_for_savings_is_in_right_form(withdrawal, user_balance):
+    try:
+        if ((user_balance - STR_TO_FLOAT(withdrawal)) > 100) and STR_TO_FLOAT(withdrawal) > 0 then
+            return True
+        ENDIF
+        print "Not enough money on the balance"
+        print "Minimum balance for current wallet is 500RM"
+    except:
+        return False
+    ENDTRY
+ENDFUNCTION
+
+FUNCTION user_savings_deposit_menu(user):
+    DECLARE string deposit_velue
+    print "Please , type how many RM you want to deposit: "
+    INPUT deposit_velue
+    if not check_if_deposit_value_is_in_right_form(deposit_velue) then
+        print "Invalid input, please try again"
+        return
+    call deposit_and_withdrawal_money_on_savings_account(user[0] , deposit_value , "deposit")
+ENDFUNCTION
+
+
+FUNCTION user_savings_withdrawal_menu(user):
+    DECLARE string withdrawal_velue
+    print "Please , type how many RM you want to withdrawal: "
+    INPUT withdrawal_velue
+    if not check_if_withdrawal_value_for_savings_is_in_right_form(withdrawal_velue) then
+        print "Invalid input, please try again"
+        return
+    call deposit_and_withdrawal_money_on_savings_account(user[0] , withdrawal_value , "withdrawal")
+ENDFUNCTION
+
+
+FUNCTION find_user_to_change_information_for(privilege)
+    DECLARE string identidier
+    print "Please enter user account number: "
+    INPUT identidier 
+    call change_user_menu(identidier, privilege)
+ENDFUNCTION
+    
+FUNCTION create_superuser():
+    return "admin,admin,spuer_user,active"
+ENDFUNCTION
+
+
+FUNCTION defalut_super_user_personal_details():
+    return "Mark Stepanov,11/08/2002,markstepanov88@gmail.com"
+ENDFUNCTION
+
+
+FUNCTION get_main_database():
+    DOWHILE True:
+        try:
+            DECLARE FILE main_database = open("main_database.txt", "r")
+            DECLARE users = main_database.readlines()
+            main_database.close()
+            DECLARE list list_to_write
+            FOREACH user in users:
+                APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(user, "\n", ""))
+            ENDFOR
+            return users
+        except:
+            DECLARE FILE main_database = open("main_database.txt", "w")
+            main_database.write(create_superuser())
+            main_database.write("\n")
+            main_database.close()
+        ENDTRY           
+    ENDWHILE
+ENDFUNCTION
+
+
+FUNCTION write_to_main_database(users):
+    DECLARE FILE main_database = open("main_database.txt" , "w")
+    FOREACH user in users:
+        main_database.write(user)
+        main_database.write("\n")
+    ENDFOR
+ENDFUNCTION
+
+FUNCTION get_user_from_main_database(number,password):
+    DECLARE list users = call get_main_database()
+    FOREACH user in users: 
+        DECLARE list current_user = SPLIT_STRING_BY_CHAR(user, ",")
+        if current_user[0] == number and current_user[1] == password and  
+                                         current_user[3] == "active" then
+            return current_user
+        ENDIF
+    ENDFOR
+    return -1
+ENDFUNCTION
+
+FUNCTION get_user_personal_details_database():
+    DOWHILE True
+        try:
+            DECLARE FILE personal_database = open("user_personal_details_database.txt", "r")
+            DECLARE list users = personal_database.readlines()
+            DECLARE list list_to_write
+            FOREACH user in users:
+                APPEND_TO_LIST(list_to_write,REPLACE_CHAR_IN_STRING(user , "\n" , ""))
+            ENDFOR
+            personal_database.close()
+            return list_to_write
+        except:
+            DECLARE FILE personal_database = open("user_personal_details_database.txt", "w")
+            personal_database.write(defalut_super_user_personal_details)
+            personal_database.write("\n")
+            personal_database.close()
+        ENDTRY
+    ENDWHILE
+ENDFUNCTION
+
+
+FUNCTION write_to_user_personal_database(user):
+    DECLARE FILE personal_database = open("user_personal_details_database.txt", "w")
+    personal_database.write(JOIN_LIST_IN_STING(user, "\n"))
+    personal_database.close()
+ENDFUNCTION
+
+FUNCTION add_new_user_in_personal_database(user_info):
+    DECLARE all_users = call get_user_personal_details_database()
+    all_users = APPEND_TO_LIST(all_users, user_info)
+    DECLARE LIST list_to_write
+    FOREACH user in all_users:
+        APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(user,"\n", ""))
+    ENDFOR
+    call write_to_user_personal_database(list_to_write)
+ENDFUNCTION
+
+FUNCTION add_new_user_in_main_database(user_info):
+    DECLARE all_users = call get_user_from_main_database()
+    all_users = APPEND_TO_LIST(all_users, user_info)
+    DECLARE LIST list_to_write
+    FOREACH user in all_users:
+        APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(user,"\n", ""))
+    ENDFOR
+    call write_to_main_database(list_to_write)
+ENDFUNCTION
+
+FUNCTION change_line_in_main_database(line_to_write, line_to_delete):
+    line_to_delete = REPLACE_CHAR_IN_STRING(line_to_delete, "\n", "")
+    DECLARE LIST main_database = call get_main_database()
+    DECLARE LIST list_to_write
+    FOREACH line in main_database:
+        if line == line_to_delete then
+            APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(line_to_write, "\n", ""))
+            continue
+        ENDIF
+        APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(line, "\n", ""))
+    ENDFOR
+    DECLARE  FILE database = open("main_database.txt" , "w")
+    database.write(JOIN_LIST_IN_STING(list_to_write , "\n"))
+ENDFUNCTION
+
+FUNCTION change_line_in_personal_details_database(line_to_write, line_to_delete):
+    line_to_delete = REPLACE_CHAR_IN_STRING(line_to_delete, "\n", "")
+    DECLARE LIST personal_database = call get_user_personal_details_database()
+    DECLARE LIST list_to_write
+    FOREACH line in personal_database:
+        if line == line_to_delete then
+            APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(line_to_write, "\n", ""))
+            continue
+        ENDIF
+        APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(line, "\n", ""))
+    ENDFOR
+    DECLARE  FILE database = open("user_personal_details_database.txt.txt" , "w")
+    database.write(JOIN_LIST_IN_STING(list_to_write , "\n"))
+ENDFUNCTION
+
+FUNCTION get_current_wallets_database():
+    DOWHILE True
+        try:
+            DECLARE FILE current_wallets_database = open("current_wallets_database.txt" "r")
+            DECLARE list wallets = current_wallets_database.readlines()
+            current_wallets_database.close()
+            DECLARE list list_to_send = []
+            FOREACH wallet in wallets:
+                APPEND_TO_LIST(list_to_send, REPLACE_CHAR_IN_STRING(wallet, "\n", ""))
+            ENDFOR
+            return list_to_send
+        except:  
+            DECLARE FILE current_wallets_database = open("current_wallets_database.txt" "w")
+            current_wallets_database.close()
+        ENDTRY  
+    ENDDO
+ENDFUNCTION
+
+
+FUNCTION get_savings_wallets_database():
+    DOWHILE True
+        try:
+            DECLARE FILE savings_wallets_database = open("savings_wallets_database.txt" "r")
+            DECLARE list wallets = savings_wallets_database.readlines()
+            savings_wallets_database.close()
+            DECLARE list list_to_send = []
+            FOREACH wallet in wallets:
+                APPEND_TO_LIST(list_to_send, REPLACE_CHAR_IN_STRING(wallet, "\n", ""))
+            ENDFOR
+            return list_to_send
+        except:  
+            DECLARE FILE savings_wallets_database = open("savings_wallets_database.txt" "w")
+            savings_wallets_database.close()
+        ENDTRY  
+    ENDDO
+ENDFUNCTION
+
+
+FUNCTION get_user_current_wallet(user_identifier):
+    DECLARE list current_wallets_database = call get_current_wallets_database()
+    FOREACH wallet in current_wallets_database:
+        DECLARE list current_wallet = SPLIT_STRING_BY_CHAR(wallet , ",")
+        if current_wallet[0] == user_identidier then 
+            return current_wallet
+        ENDIF
+    ENDFOR
+ENDFUNCTION
+
+
+FUNCTION get_user_savings_wallet(user_identifier):
+    DECLARE list savings_wallets_database = call get_savings_wallets_database()
+    FOREACH wallet in savings_wallets_database:
+        DECLARE list current_wallet = SPLIT_STRING_BY_CHAR(wallet , ",")
+        if current_wallet[0] == user_identidier then 
+            return current_wallet
+        ENDIF
+    ENDFOR
+ENDFUNCTION
+
+
+FUNCTION write_to_current_wallets_database(list_to_write):
+    DECLARE FILE current_wallets_db = open("current_wallets_database.txt", "w")
+    current_wallets_db.write(JOIN_LIST_IN_STING(list_to_write, "\n"))
+    current_wallets_db.close()
+ENDFUNCTION
+
+
+FUNCTION write_to_savings_wallets_database(list_to_write):
+    DECLARE FILE savings_wallets_db = open("savings_wallets_database.txt", "w")
+    savings_wallets_db.write(JOIN_LIST_IN_STING(list_to_write, "\n"))
+    savings_wallets_db.close()
+ENDFUNCTION
+
+
+FUNCTION add_new_user_in_current_wallets_database(user)
+    DECLARE list all_wallets = call get_current_wallets_database()
+    APPEND_TO_LIST(all_wallets, user+",0")
+    DECLARE list list_to_write
+    FOREACH user in all_wallets:
+        APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(user , "\n" , ""))
+    ENDFOR
+    call write_to_current_wallets_database(list_to_write)
+ENDFUNCTION
+
+FUNCTION add_new_user_in_savings_wallets_database(user)
+    DECLARE list all_wallets = call get_savings_wallets_database()
+    APPEND_TO_LIST(all_wallets, user+",0")
+    DECLARE list list_to_write
+    FOREACH user in all_wallets:
+        APPEND_TO_LIST(list_to_write, REPLACE_CHAR_IN_STRING(user , "\n" , ""))
+    ENDFOR
+    call write_to_savings_wallets_database(list_to_write)
+ENDFUNCTION
+
+FUNCTION deposit_and_withdrawal_money_on_current_account(user_identidier, amount, action):
+    DECLARE list current_wallets_database = call get_current_wallets_database()
+    DECLARE list list_of_wallets_to_write = []
+    DECLARE float current_amount = STR_TO_FLOAT(amount)
+    if action == "withdrawal" then  
+        current_amount *= -1
+    ENDIF
+    FOREACH wallet in current_wallets_database:
+        DECLARE list current_wallet = SPLIT_STRING_BY_CHAR(wallet, ",")
+        if current_wallet[0] == user_identidier then
+            DECLARE string previous_transactions = JOIN_LIST_IN_STING(current_wallet[2:LENGHTOFLIST(current_wallet)])
+            if previous_transactions != "" then
+                previous_transactions += ","
+            else then
+                previous_transactions = ""
+            ENDIF
+            DECLARE string new_wallet_value = user_identidier + "," +
+                                              FLOAT_TO_STR(ROUND_FLOAT(STR_TO_FLOAT(current_wallet[1]) + STR_TO_FLOAT(current_amount))) + "," +
+                                              previous_transactions + "," +
+                                              datetime.datetime.now().TO_STRING(format="%y/%d/%m-%H:%M") + "_" + action.TO_UPPER_CASE() + "_" + amount
+            APPEND_TO_LIST(list_of_wallets_to_write, new_wallet_value)
+            continue
+        ENDIF
+        APPEND_TO_LIST(list_of_wallets_to_write, wallet)
+    ENDFOR
+    DECLARE FILE current_db = open("current_wallets_database.txt", "w")
+    current_db.write(JOIN_LIST_IN_STING(list_of_wallets_to_write, "\n"))
+ENDFUNCTION
+
+
+FUNCTION deposit_and_withdrawal_money_on_savings_account(user_identidier, amount, action):
+    DECLARE list savings_wallets_database = call get_savings_wallets_database()
+    DECLARE list list_of_wallets_to_write = []
+    DECLARE float current_amount = STR_TO_FLOAT(amount)
+    if action == "withdrawal" then  
+        current_amount *= -1
+    ENDIF
+    FOREACH wallet in savings_wallets_database:
+        DECLARE list current_wallet = SPLIT_STRING_BY_CHAR(wallet, ",")
+        if current_wallet[0] == user_identidier then
+            DECLARE string previous_transactions = JOIN_LIST_IN_STING(current_wallet[2:LENGHTOFLIST(current_wallet)])
+            if previous_transactions != "" then
+                previous_transactions += ","
+            else then
+                previous_transactions = ""
+            ENDIF
+            DECLARE string new_wallet_value = user_identidier + "," +
+                                              FLOAT_TO_STR(ROUND_FLOAT(STR_TO_FLOAT(current_wallet[1]) + STR_TO_FLOAT(current_amount))) + "," +
+                                              previous_transactions + "," +
+                                              datetime.datetime.now().TO_STRING(format="%y/%d/%m-%H:%M") + "_" + action.TO_UPPER_CASE() + "_" + amount
+            APPEND_TO_LIST(list_of_wallets_to_write, new_wallet_value)
+            continue
+        ENDIF
+        APPEND_TO_LIST(list_of_wallets_to_write, wallet)
+    ENDFOR
+    DECLARE FILE savings_db = open("savings_wallets_database.txt", "w")
+    savings_db.write(JOIN_LIST_IN_STING(list_of_wallets_to_write, "\n"))
+ENDFUNCTION
+
+#END OF BATABASE FUNCTIONS
+
+FUNCTION check_if_string_is_in_right_form(banned_signs , string_to_check):
+    FOREACH sign in banned_sign:
+        if FIND_CHAR_IN_STRING(string_to_check, sign) <> -1 or TRIM_THE_STRING(string_to_check) == "" then
+            return False
+        ENDIF
+    ENDFOR
+    return True
+ENDFUNCTION
+
+FUNCTION get_user_birth_date():
+    DECLARE bool getting_user_bith_date = True
+    DECLARE DATE date = datetime.datetime
+    DOWHILE getting_user_bith_date == True:
+        print "Please, enter  DAY of birth: "
+        DECLARE string  day_of_bith 
+        INPUT day_of_bith
+        print "Please, enter birth MONTH NUMBER: "
+        DECLARE string  month_of_bith 
+        INPUT moonth_of_bith
+        print "Please, enter  YEAR of birth: "
+        DECLARE string  year_of_bith 
+        INPUT year_of_bith
+
+        if not (IS_STRING_A_DIGIT(day_of_bith)
+                and IS_STRING_A_DIGIT(month_of_bith) 
+                and IS_STRING_A_DIGIT(year_of_bith)):
+            print "Prohibited symbols have been used, please try again"
+            continue
+        ENDIF
+
+        try:
+            date = datetime.datetime(STR_TO_INT(year_of_bith), 
+                                    STR_TO_INT(month_of_bith),
+                                    STR_TO_INT(day_of_bith))
+            getting_user_bith_date = False
+        exept:
+            print "There is a mistake in your birthday date , please fill the form one more time"
+            continue 
+        ENDTRY       
+    ENDDO
+    return date
+ENDFUNCTION
+
+FUNCTION user_registration_confirmation(new_user_info):
+    DECLARE bool registration_form_confirmation_is_running = True
+    DOWHILE registration_form_confirmation_is_running:
+            print '###################' 
+            print "This is new user information (username, password, privilege mode, account status):" 
+            print new_user_info
+            DECLARE string confirmation_status
+            print "Please, confirm if this form is correct,"
+            print "otherwise you can fill this form one more time"
+            print "1.Confirm"
+            print "2.Decline"
+            INPUT confirmation_status
+            if confirmation_status == "1" then
+                print "This information will be added in main database"
+                print "###################"
+                return True
+            else if confirmation_status == "2" then
+                print "Returning to registration menu"
+                print "###################"
+                return False
+            ENDIF
+    ENDDO
+ENDFUNCTION
+
+FUNCTION check_if_identifier_is_unique(identifier):
+    DECLARE LIST main_database = call get_main_database()
+    FOREACH line in main_database:
+        DECLARE LIST current_user = SPLIT_STRING_BY_CHAR(current_user , ",")
+        if current_user[0] == identidier then
+            return True
+        ENDIF   
+    ENDFOR
+    return True
+ENDFUNCTION
+
+
+FUNCTION create_new_user(privilege):
+    DECLARE bool create_new_user_menu_is_running = True
+    DECLARE LIST BANNED_SIGNS = [",", "_", " "]
+    DOWHILE create_new_user_menu_is_running == True:
+        print "###################"
+        print "This menu is for creating "+ privilege + accounts!"
+        print "In order to create an account, please type in some personal information"
+        print "Please, make sure you don't use " + banned_signs + 
+              characters and empty fields in your personal information."
+
+        DECLARE string username
+        print "Please, enter user name: " 
+        INPUT username
+        if not call check_if_string_is_in_right_form(banned_signs, username) then
+            print("Prohibited symbols have been used, please try again")
+            continue
+        ENDIF
+
+        DECLARE string second_name
+        print "Please, enter user second name: " 
+        INPUT second_name
+        if not call check_if_string_is_in_right_form(banned_signs, second_name) then
+            print("Prohibited symbols have been used, please try again")
+            continue
+        ENDIF
+
+        DECLARE DATE user_birth_date = call get_user_birth_date()
+        
+        DECLARE string email
+        print "Please, enter user email: " 
+        INPUT email
+        if not call check_if_string_is_in_right_form(banned_signs, email) then
+            print("Prohibited symbols have been used, please try again")
+            continue
+        ENDIF
+
+        DECLARE string user_password = username + user_birth_date.TO_STRING(format="MONTH/DAY/YEAR")
+        DECLARE string user_unique_identifier = username + " " + second_name
+
+        if not call check_if_identifier_is_unique(user_unique_identifier) then
+            print "This user is already exist, please check new user personal information and try one more time"
+            continue
+        ENDIF
+
+        DECLARE string new_user_info_to_main_database = user_unique_identifier + "," +
+                                                        user_password + ","+
+                                                        privilege + ","+
+                                                        "active"
+        DECLARE string new_user_personal_details_database = user_unique_identifier + "," +
+                                                user_password + ","+
+                                                user_birth_date.TO_STRING(format="MONTH/DAY/YEAR") + ","+
+                                                email
+        if user_registration_confirmation(new_user_info_to_main_database) then
+            call add_new_user_in_main_database(new_user_info_to_main_database)
+            call add_new_user_in_personal_details_database(new_user_personal_details_database)
+            create_new_user_menu_is_running = False
+        else:
+            create_new_user_menu_is_running = False
+        ENDIF
+    ENDDO
+ENDFUNCTION
+
+FUNCTION prepare_user_info(user_identifier):
+    DECLARE string current_user_personal_string = ""
+    DECLARE list main_database = call get_main_database()
+    DECLARE list personal_details_database = call get_user_personal_details_database()
+    DECLARE string current_user_string = ""
+    FOREACH user in  main_database:
+        DECLARE list current_user = SPLIT_STRING_BY_CHAR(user , ",")
+        if user_identifier == current_user[0] then 
+            current_user_string = user
+        ENDIF
+    ENDFOR
+    if current_user_string == "" then
+        return -1
+    ENDIF
+    FOREACH user in personal_details_database:
+        current_user = SPLIT_STRING_BY_CHAR(user, ",")
+        if current_user[0] == user_identifier then
+            current_user_personal_string = user
+        ENDIF
+    ENDFOR
+
+    return current_user_personal_string , current_user_string
+ENDFUNCTION
+
+FUNCTION change_user_information_menu(user_identifier, privilege):
+    DECLARE list banned_signs = [",", "_", " "]
+    DECLARE bool change_user_information_menu_is_running = True
+    DECLARE string current_user_personal_string
+    DECLARE string current_user_main_string
+    if call prepare_user_info(user_identifier) <> -1 then 
+        current_user_personal_string, current_user_main_string = call prepare_user_info(user_identidier)
+    else then
+        print("Invalid information")
+        return False
+    ENDIF
+    DECLARE list current_user_main_database = SPLIT_STRING_BY_CHAR(current_user_string , ",")
+    DECLARE list current_user_personal_details_database =  SPLIT_STRING_BY_CHAR(current_user_personal_string, "")
+    DOWHILE change_user_information_menu_is_running == True:
+        print "###################"
+        print "You want change information in "+ current_user_main_database[0]+" account."
+        print "Current information is:
+        print "Name -" + current_user_main_database[0]
+        print "Password -" +current_user_main_database[1]}
+        print "Date of Birth -" +current_user_personal_details_database[1]
+        print "Email -" + current_user_personal_details_database[2]
+        print  "Please, make sure you don't use " + ListToString(banned_signs) + "characters and empty fields in your personal information"
+        print "Please, choose what you want to change:"
+        print "1.Password"
+        print "2.Date of Birth"
+        print "3.Email"
+        print "4.Aplly changes"
+        print "4.Return to previous menu"
+        if privilege == "super_user" then 
+            print "6.Account status"
+        ENDIF
+        DECLARE string selected_option
+        print "Please choose an option: " 
+        INPUT selected_option
+        if selected_option == "1" then
+            current_user_main_database = call change_password(banned_signs)
+        else if selected_option == "2" then 
+            current_user_personal_details_database = call get_user_birth_datez().TO_STRING(format = "%m/%d/%Y") 
+        else if selected_option == "3" then
+            current_user_personal_details_database[2] = call change_email()
+        else if selected_option == "4" then
+            DECLARE string data_to_change_to_main_database = JOIN_LIST_IN_STING(current_user_main_database , ",")
+            DECLARE string data_to_change_to_personal_details_database = JOIN_LIST_IN_STING(current_user_personal_details_database , ",")
+            call change_line_in_main_database(data_to_change_to_main_database,TRIM_THE_STRING(current_user_main_string))
+            call change_line_in_personal_details_database(data_to_change_to_personal_details_database , current_user_personal_string) 
+        else if selected_option == "5" then
+            change_user_information_menu_is_running = False
+            return False
+        else if selected_option == "6" and privilege == "super_user" then 
+            current_user_main_database[3]  = call chnage_account_status(current_user_main_database[3])
+        else then
+            print "Invalid input, please try again"
+        ENDIF
+    ENDDO
+ENDFUNCTION
+
+FUNCTION change_password(banned_signs):
+    DOWHILE True:
+        DECLARE string new_password
+        print "Please enter a password: "
+        INPUT new_password
+        if not call check_if_string_is_in_right_form(banned_signs,new_password) then
+            print "Prohibited symbols have been used, please try again"
+            continue
+        ENDIF
+        return new_password
+ENDFUNCTION
+
+
+FUNCTION change_email(banned_signs):
+    DOWHILE True:
+        DECLARE string new_email
+        print "Please enter a email: "
+        INPUT new_email
+        if not call check_if_string_is_in_right_form(banned_signs,new_email) then
+            print "Prohibited symbols have been used, please try again"
+            continue
+        ENDIF
+        return new_email
+ENDFUNCTION
+
+FUNCTION chnage_account_status(status):
+    DOWHILE True
+        if status == "active" then
+        DECLARE string selected_option
+        print "Current account status is active, change to inactive?"
+        print "1.Confirm"
+        print "2.Declinn"
+        print "Select an option: " 
+        INPUT selected_option
+            if  selected_option == "1" then
+                return "inactive"
+            else if selected_option == "2" then
+                return "active"
+            else then
+                print ""Invalid input, please try again"
+            ENDIF
+        else  if status == "inactive" then
+            DECLARE string selected_option
+            print "Current account status is inactive, change to active?"
+            print "1.Confirm"
+            print "2.Declinn"
+            print "Select an option: " 
+            INPUT selected_option
+            if selected_option == "1" then 
+                return "active"
+            else if selected_option == "2" then 
+                return "inactive"
+            else then
+                print "Invalid input, please try again"
+            ENDIF
+    ENDDO
+ENDFUNCTION
+
+
+
+run_banking_system()
+
+

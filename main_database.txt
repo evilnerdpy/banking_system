@@ -1,0 +1,6 @@
+admin,admin,super_user,active
+Tom Smith,tomtom,staff,active
+Brad McWalley,hello,user,active
+New User,iamhappy,user,active
+Mark DeSantos,Mark01/03/1971,user,active
+John Woods,coolbankingsystem,user,active
